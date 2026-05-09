@@ -269,3 +269,54 @@
     inset: -1px;
   }
 }
+
+/* Resume print styles */
+.resume-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: hsl(var(--primary));
+  font-family: var(--app-font-mono, monospace);
+  border-bottom: 1px solid hsl(var(--border));
+  padding-bottom: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .resume-page {
+    margin: 0 !important;
+    padding: 1.5rem 2rem !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    max-width: 100% !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  .resume-page * {
+    color: black !important;
+  }
+
+  .resume-page a {
+    color: #2563eb !important;
+    text-decoration: none;
+  }
+
+  .resume-section-title {
+    color: #2563eb !important;
+    border-color: #e5e7eb !important;
+  }
+}

@@ -10,7 +10,8 @@ import {
   Mail, 
   ExternalLink,
   Github,
-  Linkedin
+  Linkedin,
+  Download
 } from "lucide-react";
 import { SiPython, SiJavascript, SiHtml5, SiCss, SiReact, SiGnubash, SiGit } from "react-icons/si";
 import { FaJava } from "react-icons/fa6";
@@ -80,7 +81,7 @@ export default function Home() {
             Alex Morgan
             <span className="text-primary"> /&gt;</span>
           </div>
-          <nav className="hidden md:flex gap-6">
+          <nav className="hidden md:flex items-center gap-6">
             {SECTIONS.slice(1).map((sec) => (
               <button
                 key={sec.id}
@@ -92,6 +93,11 @@ export default function Home() {
                 {sec.label}
               </button>
             ))}
+            <Link href="/resume">
+              <Button size="sm" variant="outline" className="font-mono gap-1.5" data-testid="link-resume-nav">
+                <Download className="w-3.5 h-3.5" /> Resume
+              </Button>
+            </Link>
           </nav>
         </div>
       </header>
@@ -119,13 +125,18 @@ export default function Home() {
             <motion.p variants={fadeInUp} className="text-lg text-muted-foreground mb-8 max-w-xl leading-relaxed">
               I'm an ambitious first-year CS student with a passion for building things that matter. I learn fast, code daily, and am eager to solve real problems.
             </motion.p>
-            <motion.div variants={fadeInUp} className="flex gap-4">
-              <Button onClick={() => scrollTo("projects")} className="font-mono">
+            <motion.div variants={fadeInUp} className="flex flex-wrap gap-4">
+              <Button onClick={() => scrollTo("projects")} className="font-mono" data-testid="button-view-projects">
                 View Projects
               </Button>
-              <Button onClick={() => scrollTo("contact")} variant="outline" className="font-mono">
+              <Button onClick={() => scrollTo("contact")} variant="outline" className="font-mono" data-testid="button-get-in-touch">
                 Get in Touch
               </Button>
+              <Link href="/resume">
+                <Button variant="outline" className="font-mono gap-2" data-testid="link-resume-hero">
+                  <Download className="w-4 h-4" /> Download Resume
+                </Button>
+              </Link>
             </motion.div>
           </motion.div>
         </section>
