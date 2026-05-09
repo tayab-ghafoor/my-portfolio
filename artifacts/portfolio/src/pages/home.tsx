@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { 
@@ -26,8 +26,50 @@ const SECTIONS = [
   { id: "contact", label: "Contact" },
 ];
 
+const ROLES = [
+  "Software Engineering Student",
+  "Web Developer",
+  "Open Source Enthusiast",
+  "Problem Solver",
+  "Algorithm Tinkerer",
+];
+
+function useTypingEffect(words: string[], typeSpeed = 70, deleteSpeed = 40, pause = 1800) {
+  const [displayed, setDisplayed] = useState("");
+  const [wordIndex, setWordIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const current = words[wordIndex % words.length];
+
+    const tick = () => {
+      if (!isDeleting) {
+        setDisplayed(current.slice(0, displayed.length + 1));
+        if (displayed.length + 1 === current.length) {
+          timeoutRef.current = setTimeout(() => setIsDeleting(true), pause);
+          return;
+        }
+      } else {
+        setDisplayed(current.slice(0, displayed.length - 1));
+        if (displayed.length - 1 === 0) {
+          setIsDeleting(false);
+          setWordIndex((i) => i + 1);
+          return;
+        }
+      }
+    };
+
+    timeoutRef.current = setTimeout(tick, isDeleting ? deleteSpeed : typeSpeed);
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
+  }, [displayed, isDeleting, wordIndex, words, typeSpeed, deleteSpeed, pause]);
+
+  return displayed;
+}
+
 export default function Home() {
   const [activeSection, setActiveSection] = useState("hero");
+  const typedRole = useTypingEffect(ROLES);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -119,8 +161,9 @@ export default function Home() {
             <motion.h1 variants={fadeInUp} className="text-5xl md:text-7xl font-extrabold tracking-tight mb-4">
               Alex Morgan.
             </motion.h1>
-            <motion.h2 variants={fadeInUp} className="text-3xl md:text-5xl font-bold text-muted-foreground mb-6">
-              Software Engineering Student.
+            <motion.h2 variants={fadeInUp} className="text-3xl md:text-5xl font-bold text-muted-foreground mb-6 min-h-[1.2em]" data-testid="text-typed-role">
+              {typedRole}
+              <span className="inline-block w-[3px] h-[0.85em] bg-primary ml-1 align-middle animate-pulse" />
             </motion.h2>
             <motion.p variants={fadeInUp} className="text-lg text-muted-foreground mb-8 max-w-xl leading-relaxed">
               I'm an ambitious first-year CS student with a passion for building things that matter. I learn fast, code daily, and am eager to solve real problems.
