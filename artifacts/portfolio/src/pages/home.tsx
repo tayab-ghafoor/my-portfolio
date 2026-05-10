@@ -15,6 +15,8 @@ import {
   Sun,
   Moon,
   Award,
+  Menu,
+  X,
 } from "lucide-react";
 import { SiPython, SiJavascript, SiHtml5, SiCss, SiGnubash, SiGit } from "react-icons/si";
 import { Button } from "@/components/ui/button";
@@ -70,6 +72,7 @@ function useTypingEffect(words: string[], typeSpeed = 70, deleteSpeed = 40, paus
 
 export default function Home() {
   const [activeSection, setActiveSection] = useState("hero");
+  const [mobileOpen, setMobileOpen] = useState(false);
   const typedRole = useTypingEffect(ROLES);
   const { theme, toggleTheme } = useTheme();
 
@@ -117,6 +120,7 @@ export default function Home() {
             Tayab Ghafoor
             <span className="text-primary"> /&gt;</span>
           </div>
+          {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-6">
             {SECTIONS.slice(1).map((sec) => (
               <button
@@ -143,7 +147,49 @@ export default function Home() {
               </Button>
             </Link>
           </nav>
+
+          {/* Mobile controls */}
+          <div className="flex md:hidden items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-md border border-border text-muted-foreground hover:text-primary transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={() => setMobileOpen((o) => !o)}
+              className="p-2 rounded-md border border-border text-muted-foreground hover:text-primary transition-colors"
+              aria-label="Toggle menu"
+              data-testid="button-mobile-menu"
+            >
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile drawer */}
+        {mobileOpen && (
+          <div className="md:hidden border-t border-border/50 bg-background/95 backdrop-blur-md px-6 py-4 flex flex-col gap-1">
+            {SECTIONS.slice(1).map((sec) => (
+              <button
+                key={sec.id}
+                onClick={() => { scrollTo(sec.id); setMobileOpen(false); }}
+                className={`text-left py-2.5 text-sm font-medium transition-colors hover:text-primary border-b border-border/30 last:border-0 ${
+                  activeSection === sec.id ? "text-primary" : "text-muted-foreground"
+                }`}
+                data-testid={`mobile-link-${sec.id}`}
+              >
+                {sec.label}
+              </button>
+            ))}
+            <Link href="/resume">
+              <Button size="sm" variant="outline" className="font-mono gap-1.5 mt-3 w-full" onClick={() => setMobileOpen(false)}>
+                <Download className="w-3.5 h-3.5" /> Download Resume
+              </Button>
+            </Link>
+          </div>
+        )}
       </header>
 
       <main className="flex-1 w-full pt-16">
@@ -207,19 +253,16 @@ export default function Home() {
               </div>
               <div className="text-muted-foreground leading-loose space-y-6 text-lg">
                 <p>
-                  I'm a first-semester Software Engineering student at the University of the Punjab, Lahore. My journey into
-                  code started with a curiosity for how systems work — and it quickly turned into a passion for building
-                  tools that actually do useful things.
+                  I'm a first-semester Software Engineering student at the University of the Punjab, Lahore, with a deep curiosity for how systems work and a drive to build tools that solve real problems.
                 </p>
                 <p>
-                  My main focus is Python-based automation and system scripting. I enjoy writing programs that solve real,
-                  everyday problems — whether that's monitoring system health, organizing files, or parsing logs. I'm also
-                  actively learning web development and IT automation through self-directed study and certifications.
+                  I specialize in Python-based automation and system scripting. My work revolves around creating command-line utilities that are genuinely useful — from real-time system monitoring and automated cloud backups to log analysis and intelligent file organization. My main project, a modular System Manager CLI, reflects this passion and is the foundation of my technical growth.
                 </p>
                 <p>
-                  My goal is to grow into a well-rounded engineer — someone who can write reliable software, think through
-                  systems clearly, and keep learning every day. I'm actively seeking an internship or assistant role to
-                  apply and expand my skills.
+                  Beyond scripting, I'm actively expanding into web development and IT automation. I'm currently pursuing the Google IT Automation with Python Professional Certificate and studying AI-driven web technologies through DTAN — blending automation, backend logic, and modern web practices.
+                </p>
+                <p>
+                  I'm looking for an internship or assistant role where I can contribute to meaningful projects, learn from experienced engineers, and keep turning curiosity into code that works.
                 </p>
               </div>
             </motion.div>
