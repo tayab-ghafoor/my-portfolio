@@ -209,6 +209,52 @@
   }
 }
 
+/* Professional polish utilities */
+.hero-grid {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 60% -10%, hsl(214 100% 60% / 0.12) 0%, transparent 60%),
+    linear-gradient(hsl(var(--border)) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px);
+  background-size: 100% 100%, 48px 48px, 48px 48px;
+}
+
+.gradient-name {
+  background: linear-gradient(135deg, hsl(var(--foreground)) 30%, hsl(214 100% 65%) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glow-primary {
+  box-shadow: 0 0 0 1px hsl(214 100% 60% / 0.2), 0 4px 24px hsl(214 100% 60% / 0.08);
+}
+
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px hsl(214 100% 60% / 0.12);
+  border-color: hsl(214 100% 60% / 0.4);
+}
+
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--app-font-mono, monospace);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: hsl(var(--primary));
+  background: hsl(214 100% 60% / 0.08);
+  border: 1px solid hsl(214 100% 60% / 0.2);
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  margin-bottom: 1.25rem;
+}
+
 @layer utilities {
   input[type="search"]::-webkit-search-cancel-button {
     @apply hidden;

@@ -195,7 +195,8 @@ export default function Home() {
       <main className="flex-1 w-full pt-16">
 
         {/* HERO */}
-        <section id="hero" className="min-h-[90vh] flex items-center container mx-auto px-6 py-20">
+        <section id="hero" className="hero-grid min-h-[90vh] flex items-center px-6 py-20 relative overflow-hidden">
+          <div className="container mx-auto">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -203,10 +204,10 @@ export default function Home() {
             variants={staggerContainer}
             className="max-w-3xl"
           >
-            <motion.div variants={fadeInUp} className="font-mono text-primary mb-4">
-              Hello, world. I am
+            <motion.div variants={fadeInUp}>
+              <span className="section-label">Hello, world. I am</span>
             </motion.div>
-            <motion.h1 variants={fadeInUp} className="text-5xl md:text-7xl font-extrabold tracking-tight mb-4">
+            <motion.h1 variants={fadeInUp} className="gradient-name text-5xl md:text-7xl font-extrabold tracking-tight mb-4">
               Tayab Ghafoor.
             </motion.h1>
             <motion.h2
@@ -235,6 +236,7 @@ export default function Home() {
               </Link>
             </motion.div>
           </motion.div>
+          </div>
         </section>
 
         {/* ABOUT */}
@@ -296,7 +298,7 @@ export default function Home() {
                   <motion.div
                     key={skill.name}
                     variants={fadeInUp}
-                    className="flex flex-col items-center justify-center p-6 bg-card border border-border/50 rounded-xl hover:border-primary/50 transition-colors"
+                    className="card-hover flex flex-col items-center justify-center p-6 bg-card border border-border/50 rounded-xl"
                     data-testid={`card-skill-${skill.name.toLowerCase().replace(/\s/g, "-")}`}
                   >
                     <skill.icon className={`w-10 h-10 mb-4 ${skill.color}`} />
@@ -358,7 +360,7 @@ export default function Home() {
                   <motion.div
                     key={project.title}
                     variants={fadeInUp}
-                    className="flex flex-col bg-background border border-border rounded-xl p-6 hover:border-primary/50 transition-colors"
+                    className="card-hover flex flex-col bg-background border border-border rounded-xl p-6"
                     data-testid={`card-project-${project.title.toLowerCase().replace(/\s/g, "-")}`}
                   >
                     <div className="flex justify-between items-start mb-4">
@@ -509,8 +511,53 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="py-6 border-t border-border bg-background text-center text-sm text-muted-foreground font-mono">
-        <p>Built with React &amp; Tailwind. &copy; {new Date().getFullYear()} Tayab Ghafoor.</p>
+      <footer className="border-t border-border bg-background">
+        <div className="container mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="text-center md:text-left">
+            <p className="font-mono font-bold text-base">
+              <span className="text-primary">&lt;</span>Tayab Ghafoor<span className="text-primary"> /&gt;</span>
+            </p>
+            <p className="text-xs text-muted-foreground mt-1 font-mono">
+              &copy; {new Date().getFullYear()} — Built with React &amp; Tailwind
+            </p>
+          </div>
+          <div className="flex items-center gap-5">
+            <a
+              href="mailto:tayabghafoor786@gmail.com"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
+              data-testid="footer-link-email"
+            >
+              <span className="p-1.5 rounded-md border border-border group-hover:border-primary/50 transition-colors">
+                <Mail className="w-3.5 h-3.5" />
+              </span>
+              <span className="hidden sm:inline">tayabghafoor786@gmail.com</span>
+            </a>
+            <a
+              href="https://github.com/tayab-ghafoor"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
+              data-testid="footer-link-github"
+            >
+              <span className="p-1.5 rounded-md border border-border group-hover:border-primary/50 transition-colors">
+                <Github className="w-3.5 h-3.5" />
+              </span>
+              <span className="hidden sm:inline">tayab-ghafoor</span>
+            </a>
+            <a
+              href="https://www.linkedin.com/in/tayab-ghafoor-100100338"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
+              data-testid="footer-link-linkedin"
+            >
+              <span className="p-1.5 rounded-md border border-border group-hover:border-primary/50 transition-colors">
+                <Linkedin className="w-3.5 h-3.5" />
+              </span>
+              <span className="hidden sm:inline">tayab-ghafoor</span>
+            </a>
+          </div>
+        </div>
       </footer>
     </div>
   );
