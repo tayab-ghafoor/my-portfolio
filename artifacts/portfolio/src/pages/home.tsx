@@ -17,10 +17,12 @@ import {
   Award,
   Menu,
   X,
+  MapPin,
 } from "lucide-react";
 import { SiPython, SiJavascript, SiHtml5, SiCss, SiGnubash, SiGit } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/theme-context";
+import { ContactForm } from "@/components/contact-form";
 
 const SECTIONS = [
   { id: "hero", label: "Home" },
@@ -471,40 +473,70 @@ export default function Home() {
         </section>
 
         {/* CONTACT */}
-        <section id="contact" className="py-32 bg-card/30">
-          <div className="container mx-auto px-6 max-w-2xl text-center">
+        <section id="contact" className="py-24 bg-card/30">
+          <div className="container mx-auto px-6 max-w-5xl">
             <motion.div
               initial="hidden"
               whileInView="visible"
-              viewport={{ once: true, amount: 0.5 }}
+              viewport={{ once: true, amount: 0.2 }}
               variants={staggerContainer}
+              className="grid md:grid-cols-2 gap-16 items-start"
             >
-              <motion.div variants={fadeInUp} className="font-mono text-primary mb-4">
-                What's next?
+              {/* Left column */}
+              <motion.div variants={fadeInUp}>
+                <span className="section-label">Get in Touch</span>
+                <h2 className="text-4xl md:text-5xl font-bold mb-5 leading-tight">
+                  Let's<br />Connect
+                </h2>
+                <p className="text-muted-foreground text-lg leading-relaxed mb-8">
+                  I'm actively looking for internship opportunities, mentorship, and open source
+                  collaboration. Whether you have a question or just want to say hi, my inbox is
+                  always open.
+                </p>
+                <div className="space-y-4">
+                  <a
+                    href="mailto:tayabghafoor786@gmail.com"
+                    className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                  >
+                    <span className="p-2 rounded-lg border border-border bg-background group-hover:border-primary/50 transition-colors">
+                      <Mail className="w-4 h-4" />
+                    </span>
+                    tayabghafoor786@gmail.com
+                  </a>
+                  <a
+                    href="https://github.com/tayab-ghafoor"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                  >
+                    <span className="p-2 rounded-lg border border-border bg-background group-hover:border-primary/50 transition-colors">
+                      <Github className="w-4 h-4" />
+                    </span>
+                    github.com/tayab-ghafoor
+                  </a>
+                  <a
+                    href="https://www.linkedin.com/in/tayab-ghafoor-100100338"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
+                  >
+                    <span className="p-2 rounded-lg border border-border bg-background group-hover:border-primary/50 transition-colors">
+                      <Linkedin className="w-4 h-4" />
+                    </span>
+                    linkedin.com/in/tayab-ghafoor
+                  </a>
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <span className="p-2 rounded-lg border border-border bg-background">
+                      <MapPin className="w-4 h-4" />
+                    </span>
+                    Bela, Pakistan
+                  </div>
+                </div>
               </motion.div>
-              <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-bold mb-6">
-                Let's Connect
-              </motion.h2>
-              <motion.p variants={fadeInUp} className="text-muted-foreground text-lg mb-10 max-w-lg mx-auto">
-                I'm actively looking for internship opportunities, mentorship, and open source collaboration.
-                Based in Bela, Pakistan — my inbox is always open.
-              </motion.p>
-              <motion.div variants={fadeInUp} className="flex flex-wrap justify-center gap-4">
-                <Button size="lg" className="font-mono gap-2" asChild>
-                  <a href="mailto:tayabghafoor786@gmail.com" data-testid="link-email">
-                    <Mail className="w-4 h-4" /> Say Hello
-                  </a>
-                </Button>
-                <Button size="lg" variant="outline" className="gap-2" asChild>
-                  <a href="https://github.com/tayab-ghafoor" target="_blank" rel="noreferrer" data-testid="link-github">
-                    <Github className="w-4 h-4" /> GitHub
-                  </a>
-                </Button>
-                <Button size="lg" variant="outline" className="gap-2" asChild>
-                  <a href="https://www.linkedin.com/in/tayab-ghafoor-100100338" target="_blank" rel="noreferrer" data-testid="link-linkedin">
-                    <Linkedin className="w-4 h-4" /> LinkedIn
-                  </a>
-                </Button>
+
+              {/* Right column — form */}
+              <motion.div variants={fadeInUp}>
+                <ContactForm />
               </motion.div>
             </motion.div>
           </div>
