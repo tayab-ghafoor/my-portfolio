@@ -23,6 +23,7 @@ import { SiPython, SiJavascript, SiHtml5, SiCss, SiGnubash, SiGit } from "react-
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/theme-context";
 import { ContactForm } from "@/components/contact-form";
+import { HeroStats } from "@/components/animated-counter";
 
 const SECTIONS = [
   { id: "hero", label: "Home" },
@@ -236,6 +237,16 @@ export default function Home() {
                   <Download className="w-4 h-4" /> Download Resume
                 </Button>
               </Link>
+            </motion.div>
+            <motion.div variants={fadeInUp}>
+              <HeroStats
+                stats={[
+                  { value: 2, suffix: "+", label: "Projects Built" },
+                  { value: 2, suffix: "", label: "Certifications" },
+                  { value: 6, suffix: "+", label: "Months Coding Daily" },
+                  { value: 5, suffix: "+", label: "Technologies" },
+                ]}
+              />
             </motion.div>
           </motion.div>
           </div>
