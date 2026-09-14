@@ -1,6 +1,16 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src/**/*"],
+  "include": [
+    "src/App.tsx",
+    "src/main.tsx",
+    "src/components/contact-form.tsx",
+    "src/components/hero-scene.tsx",
+    "src/components/hero-scene-fallback.tsx",
+    "src/components/ui/button.tsx",
+    "src/contexts/theme-context.tsx",
+    "src/lib/utils.ts",
+    "src/pages/**/*.tsx"
+  ],
   "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
   "compilerOptions": {
     "noEmit": true,

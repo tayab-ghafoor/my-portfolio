@@ -1,607 +1,797 @@
-import { useState, useEffect, useRef } from "react";
-import { Link } from "wouter";
-import { motion } from "framer-motion";
+import { useEffect, lazy, Suspense, useState, useRef } from "react";
 import {
-  ChevronRight,
-  Terminal,
-  Code2,
-  Briefcase,
+  motion,
+  useReducedMotion,
+  useMotionValue,
+  useSpring,
+} from "framer-motion";
+import {
+  ArrowDown,
+  ArrowUpRight,
+  CheckCircle2,
   GraduationCap,
-  Mail,
-  ExternalLink,
   Github,
   Linkedin,
-  Download,
-  Sun,
-  Moon,
-  Award,
-  Menu,
-  X,
+  Mail,
   MapPin,
+  Menu,
+  Moon,
+  Sun,
+  Terminal,
+  X,
 } from "lucide-react";
-import { SiPython, SiJavascript, SiHtml5, SiCss, SiGnubash, SiGit } from "react-icons/si";
-import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/theme-context";
 import { ContactForm } from "@/components/contact-form";
-import { HeroStats } from "@/components/animated-counter";
+import { HeroSceneFallback } from "@/components/hero-scene-fallback";
 
-const SECTIONS = [
-  { id: "hero", label: "Home" },
-  { id: "about", label: "About" },
-  { id: "skills", label: "Skills" },
-  { id: "projects", label: "Projects" },
-  { id: "education", label: "Education" },
-  { id: "contact", label: "Contact" },
+// The three.js/canvas stack is heavy — load it only after the rest of the
+// page is interactive, instead of blocking first paint on it.
+const HeroScene = lazy(() => import("@/components/hero-scene").then((m) => ({ default: m.HeroScene })));
+
+const NAV_LINKS = [
+  { href: "#about", label: "About" },
+  { href: "#work", label: "Work" },
+  { href: "#skills", label: "Skills" },
+  { href: "#contact", label: "Contact" },
 ];
 
-const ROLES = [
-  "Software Engineering Student",
-  "Python Developer",
-  "IT Automation Enthusiast",
-  "Problem Solver",
-  "System Scripter",
+const STATS = [
+  { value: "20,000+", label: "lines shipped in SysNova CLI's Python codebase" },
+  { value: "30", label: "security findings self-audited and remediated" },
+  { value: "3", label: "tenant roles isolated at the database layer in MediNest" },
+  { value: "41", label: "automated tests across both flagship projects" },
 ];
 
-function useTypingEffect(words: string[], typeSpeed = 70, deleteSpeed = 40, pause = 1800) {
-  const [displayed, setDisplayed] = useState("");
-  const [wordIndex, setWordIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+const SKILL_GROUPS = [
+  { label: "Languages", dot: "chart-1", items: ["Python", "PHP", "JavaScript", "SQL", "HTML / CSS", "Bash"] },
+  { label: "Backend & frameworks", dot: "chart-2", items: ["Laravel", "FastAPI", "REST API design", "SQLAlchemy", "Alembic"] },
+  { label: "Databases", dot: "chart-3", items: ["MySQL / MariaDB", "PostgreSQL", "SQLite"] },
+  { label: "DevOps & deployment", dot: "chart-4", items: ["Git", "GitHub Actions", "Railway", "Netlify", "Hostinger", "PyInstaller", "Inno Setup"] },
+  {
+    label: "Engineering practices",
+    dot: "chart-1",
+    items: [
+      "Multi-tenant architecture",
+      "RBAC & authentication",
+      "Automated testing",
+      "Concurrency control",
+      "Security auditing",
+    ],
+  },
+];
 
+type Project = {
+  index: string;
+  slug: string;
+  name: string;
+  tagline: string;
+  period: string;
+  stack: string[];
+  summary: string;
+  details: { heading: string; body: string }[];
+  links: { label: string; href: string }[];
+  featured: boolean;
+};
+
+const PROJECTS: Project[] = [
+  {
+    index: "01",
+    slug: "~/projects/medinest",
+    name: "MediNest",
+    tagline: "Multi-tenant pharmacy management SaaS",
+    period: "2026",
+    stack: ["Laravel 12", "PHP", "MySQL / MariaDB", "Tailwind CSS"],
+    summary:
+      "A production SaaS platform where independent pharmacies share one application while their data never touches each other — built for a real deployment, not a classroom demo.",
+    details: [
+      {
+        heading: "Isolation is enforced in the database, not the UI",
+        body:
+          "Every pharmacy-owned record is scoped to its tenant through a global Eloquent query scope. A route that forgets to filter by pharmacy still can't leak another tenant's data, because the scope is applied at the query layer automatically.",
+      },
+      {
+        heading: "Stock can't be sold twice",
+        body:
+          "Purchases and sales run inside database transactions with row-level locking, so two staff members completing sales against the same batch at the same moment can't oversell it. Sales validate live stock before they're allowed to complete.",
+      },
+      {
+        heading: "Shipped, tested, and fixed under real conditions",
+        body:
+          "An automated PHPUnit suite covers authentication, role access, tenant isolation, and transactions, running on every push via GitHub Actions. Deployed to production on Hostinger — including diagnosing and fixing a live checkout defect end to end, from log analysis to root cause.",
+      },
+    ],
+    links: [
+      { label: "Live application", href: "https://medinest.bela002.com" },
+      { label: "Source", href: "https://github.com/tayab-ghafoor/MediNest" },
+    ],
+    featured: true,
+  },
+  {
+    index: "02",
+    slug: "~/projects/sysnova-cli",
+    name: "SysNova CLI",
+    tagline: "Cross-platform system management platform",
+    period: "Ongoing",
+    stack: ["Python", "FastAPI", "PostgreSQL", "SQLAlchemy"],
+    summary:
+      "An independent, ~20,000-line Python application for system health monitoring, log analysis, and automated backups — distributed as native Windows and Linux installers, not just a script on GitHub.",
+    details: [
+      {
+        heading: "Audited its own authentication system before anyone asked",
+        body:
+          "Wrote and documented a full security audit of the offline-first auth fallback — 30 findings, including a critical plaintext credential leak — then remediated every one: session invalidation, brute-force protection, rate-limiter concurrency bugs, timing side-channels.",
+      },
+      {
+        heading: "AI log analysis, with the sensitive data removed first",
+        body:
+          "A log-analysis feature sends errors to an AI API for fix suggestions — but scrubs credentials, tokens, and IPs out of every log locally, before anything leaves the machine. The AI never sees what it doesn't need to.",
+      },
+      {
+        heading: "A real release pipeline, not just \u2018it runs on my machine\u2019",
+        body:
+          "GitHub Actions, PyInstaller, and Inno Setup produce checksum-verified, auto-updating installers. Cloud backup integrates with rclone and OS-native credential storage across multiple providers.",
+      },
+    ],
+    links: [{ label: "Source", href: "https://github.com/tayab-ghafoor/sysnova_cli" }],
+    featured: true,
+  },
+  {
+    index: "03",
+    slug: "~/projects/context-handoff",
+    name: "Context Handoff",
+    tagline: "Cross-platform AI chat extension",
+    period: "2026",
+    stack: ["JavaScript", "Chrome Extension", "Manifest V3"],
+    summary:
+      "A browser extension that carries an in-progress conversation from one AI chat platform to another — Claude, ChatGPT, Gemini — without losing code blocks or asking you to retype your context.",
+    details: [
+      {
+        heading: "Tiered summarization, human in the loop",
+        body:
+          "Compacts a conversation with a heuristic pass, on-device browser AI, or an optional cloud API, then shows the handoff before it sends — never a silent, unreviewed transfer.",
+      },
+    ],
+    links: [{ label: "Source", href: "https://github.com/tayab-ghafoor/ai-context-handoff" }],
+    featured: false,
+  },
+];
+
+function useScrolled(threshold = 8) {
+  const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    const current = words[wordIndex % words.length];
-    const tick = () => {
-      if (!isDeleting) {
-        setDisplayed(current.slice(0, displayed.length + 1));
-        if (displayed.length + 1 === current.length) {
-          timeoutRef.current = setTimeout(() => setIsDeleting(true), pause);
-          return;
-        }
-      } else {
-        setDisplayed(current.slice(0, displayed.length - 1));
-        if (displayed.length - 1 === 0) {
-          setIsDeleting(false);
-          setWordIndex((i) => i + 1);
-          return;
-        }
-      }
-    };
-    timeoutRef.current = setTimeout(tick, isDeleting ? deleteSpeed : typeSpeed);
-    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
-  }, [displayed, isDeleting, wordIndex, words, typeSpeed, deleteSpeed, pause]);
-
-  return displayed;
+    const onScroll = () => setScrolled(window.scrollY > threshold);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [threshold]);
+  return scrolled;
 }
 
-export default function Home() {
-  const [activeSection, setActiveSection] = useState("hero");
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const typedRole = useTypingEffect(ROLES);
+/** Smooth, subtle perspective tilt that responds to the cursor — motion
+ *  that answers a person's action, not an ambient animation. Disabled
+ *  entirely under prefers-reduced-motion. */
+function useTilt(strength = 7) {
+  const ref = useRef<HTMLDivElement>(null);
+  const rawX = useMotionValue(0);
+  const rawY = useMotionValue(0);
+  const rotateX = useSpring(rawX, { stiffness: 180, damping: 20, mass: 0.5 });
+  const rotateY = useSpring(rawY, { stiffness: 180, damping: 20, mass: 0.5 });
+  const reduceMotion = useReducedMotion();
+
+  function onMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    if (reduceMotion || !ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width - 0.5;
+    const py = (e.clientY - rect.top) / rect.height - 0.5;
+    rawY.set(px * strength);
+    rawX.set(-py * strength);
+  }
+  function onMouseLeave() {
+    rawX.set(0);
+    rawY.set(0);
+  }
+
+  return { ref, rotateX, rotateY, onMouseMove, onMouseLeave };
+}
+
+function Nav() {
   const { theme, toggleTheme } = useTheme();
+  const scrolled = useScrolled();
+  const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) setActiveSection(entry.target.id);
-        });
-      },
-      { threshold: 0.3 }
-    );
-    SECTIONS.forEach(({ id }) => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
-  }, []);
+  return (
+    <header
+      className={`fixed top-0 inset-x-0 z-50 transition-colors duration-300 ${
+        scrolled ? "glass-strong" : "border-b border-transparent"
+      }`}
+      data-testid="site-header"
+    >
+      <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
+        <a href="#top" className="inline-flex items-center gap-2 group" data-testid="link-home">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-brand text-[13px] font-display font-bold text-background">
+            TG
+          </span>
+          <span className="font-display text-[1.02rem] font-semibold tracking-tight">
+            Tayab Ghafoor
+          </span>
+        </a>
 
-  const scrollTo = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
-  };
+        <nav className="hidden md:flex items-center gap-8">
+          {NAV_LINKS.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              data-testid={`link-nav-${link.label.toLowerCase()}`}
+            >
+              {link.label}
+            </a>
+          ))}
+        </nav>
 
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 40 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
-  };
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className="hover-elevate active-elevate-2 h-9 w-9 rounded-md border border-border flex items-center justify-center"
+            data-testid="button-theme-toggle"
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+          <a
+            href="/resume"
+            className="hidden sm:inline-flex hover-elevate active-elevate-2 h-9 items-center rounded-md border border-primary-border bg-primary text-primary-foreground px-4 text-sm font-medium"
+            data-testid="link-resume"
+          >
+            R&eacute;sum&eacute;
+          </a>
+          <button
+            type="button"
+            className="md:hidden hover-elevate active-elevate-2 h-9 w-9 rounded-md border border-border flex items-center justify-center"
+            onClick={() => setOpen((o) => !o)}
+            aria-label="Toggle menu"
+            data-testid="button-mobile-menu"
+          >
+            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </button>
+        </div>
+      </div>
 
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+      {open && (
+        <nav className="md:hidden border-t border-border glass-strong px-6 py-4 flex flex-col gap-4">
+          {NAV_LINKS.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="text-sm text-muted-foreground hover:text-foreground"
+              onClick={() => setOpen(false)}
+            >
+              {link.label}
+            </a>
+          ))}
+          <a href="/resume" className="text-sm font-medium text-primary">
+            R&eacute;sum&eacute;
+          </a>
+        </nav>
+      )}
+    </header>
+  );
+}
+
+function Hero() {
+  const shouldReduceMotion = useReducedMotion();
+  const rise = {
+    hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 16 },
+    show: { opacity: 1, y: 0 },
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-sans">
-      {/* Sticky Nav */}
-      <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
-        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          <div
-            className="font-mono font-bold text-lg tracking-tighter cursor-pointer"
-            onClick={() => scrollTo("hero")}
-          >
-            <span className="text-primary">&lt;</span>
-            Tayab Ghafoor
-            <span className="text-primary"> /&gt;</span>
-          </div>
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-6">
-            {SECTIONS.slice(1).map((sec) => (
-              <button
-                key={sec.id}
-                onClick={() => scrollTo(sec.id)}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  activeSection === sec.id ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                {sec.label}
-              </button>
-            ))}
-            <button
-              onClick={toggleTheme}
-              data-testid="button-theme-toggle"
-              className="p-2 rounded-md border border-border hover:border-primary/50 text-muted-foreground hover:text-primary transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-            <Link href="/resume">
-              <Button size="sm" variant="outline" className="font-mono gap-1.5" data-testid="link-resume-nav">
-                <Download className="w-3.5 h-3.5" /> Resume
-              </Button>
-            </Link>
-          </nav>
+    <section id="top" className="relative overflow-hidden pt-16">
+      {/* Full-bleed 3D scene — the ambient backdrop for the whole hero */}
+      <div className="absolute inset-0" aria-hidden={false}>
+        <div
+          className="pointer-events-none absolute -top-32 right-[-10%] h-[520px] w-[520px] rounded-full opacity-30 blur-[110px]"
+          style={{ background: "hsl(var(--brand-cyan))" }}
+        />
+        <div
+          className="pointer-events-none absolute bottom-[-15%] left-[-8%] h-[460px] w-[460px] rounded-full opacity-20 blur-[110px]"
+          style={{ background: "hsl(var(--brand-violet))" }}
+        />
+        <Suspense fallback={<HeroSceneFallback />}>
+          <HeroScene />
+        </Suspense>
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(180deg, hsl(var(--background) / 0.25) 0%, transparent 28%, hsl(var(--background) / 0.5) 78%, hsl(var(--background)) 100%)",
+          }}
+        />
+      </div>
 
-          {/* Mobile controls */}
-          <div className="flex md:hidden items-center gap-2">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-md border border-border text-muted-foreground hover:text-primary transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-            <button
-              onClick={() => setMobileOpen((o) => !o)}
-              className="p-2 rounded-md border border-border text-muted-foreground hover:text-primary transition-colors"
-              aria-label="Toggle menu"
-              data-testid="button-mobile-menu"
-            >
-              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile drawer */}
-        {mobileOpen && (
-          <div className="md:hidden border-t border-border/50 bg-background/95 backdrop-blur-md px-6 py-4 flex flex-col gap-1">
-            {SECTIONS.slice(1).map((sec) => (
-              <button
-                key={sec.id}
-                onClick={() => { scrollTo(sec.id); setMobileOpen(false); }}
-                className={`text-left py-2.5 text-sm font-medium transition-colors hover:text-primary border-b border-border/30 last:border-0 ${
-                  activeSection === sec.id ? "text-primary" : "text-muted-foreground"
-                }`}
-                data-testid={`mobile-link-${sec.id}`}
-              >
-                {sec.label}
-              </button>
-            ))}
-            <Link href="/resume">
-              <Button size="sm" variant="outline" className="font-mono gap-1.5 mt-3 w-full" onClick={() => setMobileOpen(false)}>
-                <Download className="w-3.5 h-3.5" /> Download Resume
-              </Button>
-            </Link>
-          </div>
-        )}
-      </header>
-
-      <main className="flex-1 w-full pt-16">
-
-        {/* HERO */}
-        <section id="hero" className="hero-grid min-h-[90vh] flex items-center px-6 py-20 relative overflow-hidden">
-          <div className="container mx-auto">
+      <div className="relative mx-auto max-w-6xl px-6 pt-24 pb-16 md:pt-32 md:pb-20 min-h-[640px] md:min-h-[760px] flex flex-col justify-center">
+        <div className="max-w-2xl glass-strong rounded-3xl p-6 sm:p-8 md:p-10">
           <motion.div
             initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="max-w-3xl"
+            animate="show"
+            variants={rise}
+            transition={{ duration: 0.5 }}
+            className="mb-6 flex flex-wrap items-center gap-3"
           >
-            <motion.div variants={fadeInUp}>
-              <span className="section-label">Hello, world. I am</span>
-            </motion.div>
-            <motion.h1 variants={fadeInUp} className="gradient-name text-5xl md:text-7xl font-extrabold tracking-tight mb-4">
-              Tayab Ghafoor.
-            </motion.h1>
-            <motion.h2
-              variants={fadeInUp}
-              className="text-3xl md:text-5xl font-bold text-muted-foreground mb-6 min-h-[1.2em]"
-              data-testid="text-typed-role"
-            >
-              {typedRole}
-              <span className="inline-block w-[3px] h-[0.85em] bg-primary ml-1 align-middle animate-pulse" />
-            </motion.h2>
-            <motion.p variants={fadeInUp} className="text-lg text-muted-foreground mb-8 max-w-xl leading-relaxed">
-              First-semester Software Engineering student at University of the Punjab. I build Python-based automation tools,
-              explore web development, and solve practical problems through code.
-            </motion.p>
-            <motion.div variants={fadeInUp} className="flex flex-wrap gap-4">
-              <Button onClick={() => scrollTo("projects")} className="font-mono" data-testid="button-view-projects">
-                View Projects
-              </Button>
-              <Button onClick={() => scrollTo("contact")} variant="outline" className="font-mono" data-testid="button-get-in-touch">
-                Get in Touch
-              </Button>
-              <Link href="/resume">
-                <Button variant="outline" className="font-mono gap-2" data-testid="link-resume-hero">
-                  <Download className="w-4 h-4" /> Download Resume
-                </Button>
-              </Link>
-            </motion.div>
-            <motion.div variants={fadeInUp}>
-              <HeroStats
-                stats={[
-                  { value: 2, suffix: "+", label: "Projects Built" },
-                  { value: 2, suffix: "", label: "Certifications" },
-                  { value: 6, suffix: "+", label: "Months Coding Daily" },
-                  { value: 5, suffix: "+", label: "Technologies" },
-                ]}
-              />
-            </motion.div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-3.5 py-1.5 text-sm">
+              <span className="signal-dot" />
+              Available for freelance &amp; remote work
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5" />
+              Lahore, Pakistan
+            </span>
           </motion.div>
-          </div>
-        </section>
 
-        {/* ABOUT */}
-        <section id="about" className="py-24 bg-card/30">
-          <div className="container mx-auto px-6 max-w-4xl">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              variants={fadeInUp}
-            >
-              <div className="flex items-center gap-4 mb-10">
-                <Terminal className="w-8 h-8 text-primary" />
-                <h2 className="text-3xl font-bold font-mono">/about</h2>
-                <div className="h-[1px] bg-border flex-1 ml-4" />
-              </div>
-              <div className="text-muted-foreground leading-loose space-y-6 text-lg">
-                <p>
-                  I'm a first-semester Software Engineering student at the University of the Punjab, Lahore, with a deep curiosity for how systems work and a drive to build tools that solve real problems.
-                </p>
-                <p>
-                  I specialize in Python-based automation and system scripting. My work revolves around creating command-line utilities that are genuinely useful — from real-time system monitoring and automated cloud backups to log analysis and intelligent file organization. My main project, a modular System Manager CLI, reflects this passion and is the foundation of my technical growth.
-                </p>
-                <p>
-                  Beyond scripting, I'm actively expanding into web development and IT automation. I'm currently pursuing the Google IT Automation with Python Professional Certificate and studying AI-driven web technologies through DTAN — blending automation, backend logic, and modern web practices.
-                </p>
-                <p>
-                  I'm looking for an internship or assistant role where I can contribute to meaningful projects, learn from experienced engineers, and keep turning curiosity into code that works.
-                </p>
-              </div>
-            </motion.div>
-          </div>
-        </section>
+          <motion.h1
+            initial="hidden"
+            animate="show"
+            variants={rise}
+            transition={{ duration: 0.55, delay: 0.06 }}
+            className="font-display text-4xl sm:text-5xl md:text-[3.4rem] font-semibold leading-[1.08] tracking-tight text-foreground"
+            data-testid="text-headline"
+          >
+            I build software that has to keep working after the demo ends.
+          </motion.h1>
 
-        {/* SKILLS */}
-        <section id="skills" className="py-24">
-          <div className="container mx-auto px-6 max-w-4xl">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              variants={staggerContainer}
-            >
-              <motion.div variants={fadeInUp} className="flex items-center gap-4 mb-12">
-                <Code2 className="w-8 h-8 text-primary" />
-                <h2 className="text-3xl font-bold font-mono">/skills</h2>
-                <div className="h-[1px] bg-border flex-1 ml-4" />
-              </motion.div>
+          <motion.p
+            initial="hidden"
+            animate="show"
+            variants={rise}
+            transition={{ duration: 0.55, delay: 0.14 }}
+            className="mt-6 text-lg text-muted-foreground max-w-xl leading-relaxed"
+            data-testid="text-subhead"
+          >
+            Full-stack and systems developer pursuing a B.Sc. in Software Engineering.
+            I ship production Laravel/PHP platforms and Python/FastAPI systems tooling
+            &mdash; the kind that get tenant isolation, concurrency, and security audits
+            right, because those are the parts that actually break in production.
+          </motion.p>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { name: "Python", icon: SiPython, color: "text-blue-400" },
-                  { name: "HTML5", icon: SiHtml5, color: "text-orange-500" },
-                  { name: "CSS3", icon: SiCss, color: "text-blue-500" },
-                  { name: "JavaScript", icon: SiJavascript, color: "text-yellow-400" },
-                  { name: "Git", icon: SiGit, color: "text-orange-600" },
-                  { name: "Linux / CLI", icon: SiGnubash, color: "text-green-400" },
-                ].map((skill) => (
-                  <motion.div
-                    key={skill.name}
-                    variants={fadeInUp}
-                    className="card-hover flex flex-col items-center justify-center p-6 bg-card border border-border/50 rounded-xl"
-                    data-testid={`card-skill-${skill.name.toLowerCase().replace(/\s/g, "-")}`}
-                  >
-                    <skill.icon className={`w-10 h-10 mb-4 ${skill.color}`} />
-                    <span className="font-mono text-sm">{skill.name}</span>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Automation & Concepts tags */}
-              <motion.div variants={fadeInUp} className="mt-8">
-                <p className="font-mono text-sm text-muted-foreground uppercase tracking-wider mb-3">Automation & Concepts</p>
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    "File Handling", "System Monitoring", "Task Scheduling", "Shell Scripting",
-                    "Log Parsing", "CRON", "Error Handling", "Procedural Programming", "Backup Automation",
-                  ].map((tag) => (
-                    <span key={tag} className="text-xs font-mono px-3 py-1.5 bg-primary/10 text-primary border border-primary/20 rounded-full">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* PROJECTS */}
-        <section id="projects" className="py-24 bg-card/30">
-          <div className="container mx-auto px-6 max-w-5xl">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.1 }}
-              variants={staggerContainer}
-            >
-              <motion.div variants={fadeInUp} className="flex items-center gap-4 mb-12">
-                <Briefcase className="w-8 h-8 text-primary" />
-                <h2 className="text-3xl font-bold font-mono">/projects</h2>
-                <div className="h-[1px] bg-border flex-1 ml-4" />
-              </motion.div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                {[
-                  {
-                    title: "System Manager CLI",
-                    badge: "Ongoing",
-                    desc: "A modular command-line tool to automate common system administration tasks. Features a health monitor, backup logic with versioning, log analysis, temp file organizer, and a built-in task scheduler.",
-                    tech: ["Python", "CLI", "Automation", "System Admin"],
-                    link: "https://github.com/tayab-ghafoor",
-                  },
-                  {
-                    title: "Calculator App",
-                    badge: "Completed",
-                    desc: "An interactive command-line calculator with support for basic arithmetic operations, input validation, and continuous calculation loops — built to master Python fundamentals.",
-                    tech: ["Python", "CLI", "Input Validation", "Error Handling"],
-                    link: "https://github.com/tayab-ghafoor",
-                  },
-                ].map((project) => (
-                  <motion.div
-                    key={project.title}
-                    variants={fadeInUp}
-                    className="card-hover flex flex-col bg-background border border-border rounded-xl p-6"
-                    data-testid={`card-project-${project.title.toLowerCase().replace(/\s/g, "-")}`}
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-3 bg-primary/10 rounded-lg">
-                          <Terminal className="w-6 h-6 text-primary" />
-                        </div>
-                        <span className={`text-xs font-mono px-2 py-0.5 rounded-full border ${
-                          project.badge === "Ongoing"
-                            ? "border-yellow-500/40 text-yellow-500 bg-yellow-500/10"
-                            : "border-green-500/40 text-green-500 bg-green-500/10"
-                        }`}>
-                          {project.badge}
-                        </span>
-                      </div>
-                      <a
-                        href={project.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-muted-foreground hover:text-primary transition-colors"
-                        data-testid={`link-project-github-${project.title.toLowerCase().replace(/\s/g, "-")}`}
-                      >
-                        <ExternalLink className="w-5 h-5" />
-                      </a>
-                    </div>
-                    <h3 className="text-xl font-bold mb-2">{project.title}</h3>
-                    <p className="text-muted-foreground text-sm flex-1 mb-6">{project.desc}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {project.tech.map((t) => (
-                        <span key={t} className="text-xs font-mono px-2 py-1 bg-secondary text-secondary-foreground rounded-md">
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* EDUCATION */}
-        <section id="education" className="py-24">
-          <div className="container mx-auto px-6 max-w-4xl">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              variants={staggerContainer}
-            >
-              <motion.div variants={fadeInUp} className="flex items-center gap-4 mb-12">
-                <GraduationCap className="w-8 h-8 text-primary" />
-                <h2 className="text-3xl font-bold font-mono">/education</h2>
-                <div className="h-[1px] bg-border flex-1 ml-4" />
-              </motion.div>
-
-              {/* Degree */}
-              <motion.div variants={fadeInUp} className="bg-card border border-border rounded-xl p-8 max-w-2xl relative overflow-hidden mb-6">
-                <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
-                  <h3 className="text-2xl font-bold">B.Sc. Software Engineering</h3>
-                  <span className="font-mono text-primary bg-primary/10 px-3 py-1 rounded-md text-sm mt-2 md:mt-0">Expected 2030</span>
-                </div>
-                <p className="text-muted-foreground mb-6 text-lg">University of the Punjab, Lahore &bull; 1st Semester</p>
-                <div className="space-y-3">
-                  <h4 className="font-mono text-sm text-muted-foreground uppercase tracking-wider">Relevant Coursework</h4>
-                  <ul className="grid sm:grid-cols-2 gap-2">
-                    {["Introduction to Programming (Python)", "Calculus I", "Discrete Mathematics", "Computing Fundamentals"].map((c) => (
-                      <li key={c} className="flex items-center gap-2 text-sm">
-                        <ChevronRight className="w-4 h-4 text-primary flex-shrink-0" /> {c}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </motion.div>
-
-              {/* Certifications */}
-              <motion.div variants={fadeInUp}>
-                <div className="flex items-center gap-3 mb-4">
-                  <Award className="w-5 h-5 text-primary" />
-                  <h3 className="font-mono text-sm text-muted-foreground uppercase tracking-wider">Certifications & Training</h3>
-                </div>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {[
-                    { name: "Google IT Automation with Python", provider: "Coursera", status: "In Progress" },
-                    { name: "AI Web Development", provider: "DTAN, Lahore", status: "In Progress" },
-                    { name: "Web Development Fundamentals", provider: "DTAN, Lahore", status: "Completed" },
-                  ].map((cert) => (
-                    <div
-                      key={cert.name}
-                      className="bg-card border border-border/50 rounded-lg p-4 hover:border-primary/40 transition-colors"
-                    >
-                      <p className="font-semibold text-sm">{cert.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{cert.provider}</p>
-                      <span className={`text-xs font-mono mt-2 inline-block px-2 py-0.5 rounded-full border ${
-                        cert.status === "Completed"
-                          ? "border-green-500/40 text-green-500 bg-green-500/10"
-                          : "border-yellow-500/40 text-yellow-500 bg-yellow-500/10"
-                      }`}>
-                        {cert.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* CONTACT */}
-        <section id="contact" className="py-24 bg-card/30">
-          <div className="container mx-auto px-6 max-w-5xl">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              variants={staggerContainer}
-              className="grid md:grid-cols-2 gap-16 items-start"
-            >
-              {/* Left column */}
-              <motion.div variants={fadeInUp}>
-                <span className="section-label">Get in Touch</span>
-                <h2 className="text-4xl md:text-5xl font-bold mb-5 leading-tight">
-                  Let's<br />Connect
-                </h2>
-                <p className="text-muted-foreground text-lg leading-relaxed mb-8">
-                  I'm actively looking for internship opportunities, mentorship, and open source
-                  collaboration. Whether you have a question or just want to say hi, my inbox is
-                  always open.
-                </p>
-                <div className="space-y-4">
-                  <a
-                    href="mailto:tayabghafoor786@gmail.com"
-                    className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
-                  >
-                    <span className="p-2 rounded-lg border border-border bg-background group-hover:border-primary/50 transition-colors">
-                      <Mail className="w-4 h-4" />
-                    </span>
-                    tayabghafoor786@gmail.com
-                  </a>
-                  <a
-                    href="https://github.com/tayab-ghafoor"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
-                  >
-                    <span className="p-2 rounded-lg border border-border bg-background group-hover:border-primary/50 transition-colors">
-                      <Github className="w-4 h-4" />
-                    </span>
-                    github.com/tayab-ghafoor
-                  </a>
-                  <a
-                    href="https://www.linkedin.com/in/tayab-ghafoor-100100338"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors group"
-                  >
-                    <span className="p-2 rounded-lg border border-border bg-background group-hover:border-primary/50 transition-colors">
-                      <Linkedin className="w-4 h-4" />
-                    </span>
-                    linkedin.com/in/tayab-ghafoor
-                  </a>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    <span className="p-2 rounded-lg border border-border bg-background">
-                      <MapPin className="w-4 h-4" />
-                    </span>
-                    Bela, Pakistan
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Right column — form */}
-              <motion.div variants={fadeInUp}>
-                <ContactForm />
-              </motion.div>
-            </motion.div>
-          </div>
-        </section>
-      </main>
-
-      <footer className="border-t border-border bg-background">
-        <div className="container mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="text-center md:text-left">
-            <p className="font-mono font-bold text-base">
-              <span className="text-primary">&lt;</span>Tayab Ghafoor<span className="text-primary"> /&gt;</span>
-            </p>
-            <p className="text-xs text-muted-foreground mt-1 font-mono">
-              &copy; {new Date().getFullYear()} — Built with React &amp; Tailwind
-            </p>
-          </div>
-          <div className="flex items-center gap-5">
+          <motion.div
+            initial="hidden"
+            animate="show"
+            variants={rise}
+            transition={{ duration: 0.55, delay: 0.2 }}
+            className="mt-8 flex flex-wrap items-center gap-4"
+          >
             <a
-              href="mailto:tayabghafoor786@gmail.com"
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
-              data-testid="footer-link-email"
+              href="#work"
+              className="hover-elevate active-elevate-2 inline-flex h-11 items-center rounded-full bg-gradient-brand text-background px-6 text-sm font-semibold glow-cyan"
+              data-testid="link-view-work"
             >
-              <span className="p-1.5 rounded-md border border-border group-hover:border-primary/50 transition-colors">
-                <Mail className="w-3.5 h-3.5" />
-              </span>
-              <span className="hidden sm:inline">tayabghafoor786@gmail.com</span>
+              See the work
             </a>
             <a
-              href="https://github.com/tayab-ghafoor"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
-              data-testid="footer-link-github"
+              href="#contact"
+              className="hover-elevate active-elevate-2 inline-flex h-11 items-center rounded-full border border-border bg-background/60 px-6 text-sm font-medium"
+              data-testid="link-get-in-touch"
             >
-              <span className="p-1.5 rounded-md border border-border group-hover:border-primary/50 transition-colors">
-                <Github className="w-3.5 h-3.5" />
-              </span>
-              <span className="hidden sm:inline">tayab-ghafoor</span>
+              Get in touch
             </a>
-            <a
-              href="https://www.linkedin.com/in/tayab-ghafoor-100100338"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors group"
-              data-testid="footer-link-linkedin"
-            >
-              <span className="p-1.5 rounded-md border border-border group-hover:border-primary/50 transition-colors">
-                <Linkedin className="w-3.5 h-3.5" />
+          </motion.div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="glass-strong mt-16 md:mt-20 rounded-2xl px-6 py-7 md:px-10 md:py-8 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-7"
+        >
+          {STATS.map((stat) => (
+            <div key={stat.label} data-testid={`stat-${stat.value}`}>
+              <div className="font-display text-3xl font-semibold text-gradient-brand">{stat.value}</div>
+              <div className="mt-1.5 text-sm text-muted-foreground leading-snug">{stat.label}</div>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+
+      {!shouldReduceMotion && (
+        <motion.a
+          href="#about"
+          aria-label="Scroll to About section"
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden sm:flex h-9 w-9 items-center justify-center rounded-full glass text-muted-foreground"
+          animate={{ y: [0, 6, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <ArrowDown className="h-4 w-4" />
+        </motion.a>
+      )}
+    </section>
+  );
+}
+
+function About() {
+  const facts = [
+    { label: "Based in", value: "Lahore, Pakistan" },
+    { label: "Focus", value: "Backend systems & multi-tenant SaaS" },
+    { label: "Studying", value: "B.Sc. Software Engineering, 2030" },
+    { label: "Status", value: "Open to freelance & remote roles" },
+  ];
+
+  return (
+    <section id="about" className="py-20 md:py-28 rule-glow">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="grid lg:grid-cols-[340px_1fr] gap-10 lg:gap-16">
+          <div className="glass-strong rounded-2xl p-7 h-fit">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-brand text-background font-display font-bold">
+                TG
               </span>
-              <span className="hidden sm:inline">tayab-ghafoor</span>
-            </a>
+              <div>
+                <p className="font-display font-semibold leading-tight">Tayab Ghafoor</p>
+                <p className="text-xs text-muted-foreground">Full-stack &amp; systems developer</p>
+              </div>
+            </div>
+            <dl className="space-y-4">
+              {facts.map((fact) => (
+                <div key={fact.label} className="text-sm">
+                  <dt className="text-muted-foreground text-xs mb-0.5">{fact.label}</dt>
+                  <dd className="font-medium">{fact.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div>
+            <h2 className="font-display text-2xl md:text-3xl font-semibold mb-6">About</h2>
+            <div className="max-w-2xl space-y-5 text-[1.05rem] leading-relaxed text-foreground/90">
+              <p>
+                I'm a self-directed software developer and first-year Software
+                Engineering student at the University of the Punjab, Lahore. Most of
+                what I know didn't come from a syllabus &mdash; it came from building
+                two production-scale projects independently and dealing with what
+                actually goes wrong.
+              </p>
+              <p>
+                I work across two distinct areas: full-stack web applications
+                (Laravel/PHP, multi-tenant architecture, relational database design)
+                and independent systems tooling (Python, FastAPI, desktop packaging,
+                CI/CD release pipelines). Both share the same standard &mdash; I'd
+                rather ship something smaller that's genuinely reliable than
+                something bigger that mostly works.
+              </p>
+              <p className="text-muted-foreground">
+                Currently open to freelance projects, remote roles, and internship
+                opportunities.
+              </p>
+            </div>
           </div>
         </div>
-      </footer>
+      </div>
+    </section>
+  );
+}
+
+function ProjectCard({ project }: { project: Project }) {
+  const tilt = useTilt(5);
+
+  if (!project.featured) {
+    return (
+      <motion.article
+        ref={tilt.ref}
+        onMouseMove={tilt.onMouseMove}
+        onMouseLeave={tilt.onMouseLeave}
+        style={{ rotateX: tilt.rotateX, rotateY: tilt.rotateY, transformPerspective: 1200 }}
+        className="glow-border-hover rounded-2xl border border-border bg-card/60 overflow-hidden"
+        data-testid={`project-${project.name.toLowerCase().replace(/\s+/g, "-")}`}
+      >
+        <div className="flex items-center gap-2 px-5 py-3 border-b border-border bg-muted/40">
+          <span className="terminal-dot" />
+          <span className="terminal-dot" />
+          <span className="terminal-dot" />
+          <span className="ml-2 font-mono text-xs text-muted-foreground truncate">{project.slug}</span>
+        </div>
+
+        <div className="p-6 md:p-8">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="case-index">{project.index}</span>
+            <h3 className="font-display text-xl font-semibold">{project.name}</h3>
+            <span className="text-sm text-muted-foreground">&mdash; {project.tagline}</span>
+            <span className="text-xs text-muted-foreground font-mono ml-auto">{project.period}</span>
+          </div>
+
+          <p className="mt-4 text-foreground/90 leading-relaxed max-w-3xl">{project.summary}</p>
+
+          {project.details.map((detail) => (
+            <div key={detail.heading} className="flex gap-3 mt-5 max-w-3xl">
+              <CheckCircle2 className="h-5 w-5 text-signal shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-foreground mb-1">{detail.heading}</p>
+                <p className="text-muted-foreground leading-relaxed">{detail.body}</p>
+              </div>
+            </div>
+          ))}
+
+          <div className="flex flex-wrap items-center gap-4 mt-6">
+            <div className="flex flex-wrap gap-1.5">
+              {project.stack.map((tech) => (
+                <span
+                  key={tech}
+                  className="font-mono text-[0.7rem] text-muted-foreground bg-muted rounded-full px-2.5 py-1"
+                >
+                  {tech}
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-4 ml-auto">
+              {project.links.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline underline-offset-4"
+                  data-testid={`link-${project.name.toLowerCase()}-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+                >
+                  {link.label}
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      </motion.article>
+    );
+  }
+
+  return (
+    <motion.article
+      ref={tilt.ref}
+      onMouseMove={tilt.onMouseMove}
+      onMouseLeave={tilt.onMouseLeave}
+      style={{ rotateX: tilt.rotateX, rotateY: tilt.rotateY, transformPerspective: 1200 }}
+      className="glow-border-hover rounded-2xl border border-border bg-card/60 overflow-hidden"
+      data-testid={`project-${project.name.toLowerCase().replace(/\s+/g, "-")}`}
+    >
+      <div className="flex items-center gap-2 px-5 py-3 border-b border-border bg-muted/40">
+        <span className="terminal-dot" />
+        <span className="terminal-dot" />
+        <span className="terminal-dot" />
+        <span className="ml-2 font-mono text-xs text-muted-foreground truncate">{project.slug}</span>
+        {project.featured && (
+          <span className="ml-auto text-[0.7rem] font-mono uppercase tracking-wide text-primary/90 hidden sm:inline">
+            featured
+          </span>
+        )}
+      </div>
+
+      <div className="grid md:grid-cols-[200px_1fr] gap-8 md:gap-12 p-6 md:p-9">
+        <div>
+          <span className="case-index">{project.index}</span>
+          <h3 className="font-display text-2xl font-semibold mt-2">{project.name}</h3>
+          <p className="text-sm text-muted-foreground mt-1">{project.tagline}</p>
+          <p className="text-xs text-muted-foreground mt-3 font-mono">{project.period}</p>
+          <div className="flex flex-wrap gap-1.5 mt-4">
+            {project.stack.map((tech) => (
+              <span
+                key={tech}
+                className="font-mono text-[0.7rem] text-muted-foreground bg-muted rounded-full px-2.5 py-1"
+              >
+                {tech}
+              </span>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2 mt-5">
+            {project.links.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline underline-offset-4"
+                data-testid={`link-${project.name.toLowerCase()}-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
+              >
+                {link.label}
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div className="max-w-2xl">
+          <p className="text-[1.05rem] leading-relaxed text-foreground/90">{project.summary}</p>
+          <dl className="mt-8 space-y-6">
+            {project.details.map((detail) => (
+              <div key={detail.heading} className="flex gap-3">
+                <CheckCircle2 className="h-5 w-5 text-signal shrink-0 mt-0.5" />
+                <div>
+                  <dt className="font-medium text-foreground mb-1.5">{detail.heading}</dt>
+                  <dd className="text-muted-foreground leading-relaxed">{detail.body}</dd>
+                </div>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </div>
+    </motion.article>
+  );
+}
+
+function Work() {
+  return (
+    <section id="work" className="py-20 md:py-28 rule-glow bg-muted/20">
+      <div className="mx-auto max-w-6xl px-6">
+        <h2 className="font-display text-2xl md:text-3xl font-semibold mb-2">Selected work</h2>
+        <p className="text-muted-foreground max-w-xl">
+          Three projects, in the order I'd want a recruiter to open them.
+        </p>
+        <div className="mt-10 space-y-8">
+          {PROJECTS.map((project) => (
+            <ProjectCard key={project.name} project={project} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Skills() {
+  return (
+    <section id="skills" className="py-20 md:py-28 rule-glow">
+      <div className="mx-auto max-w-6xl px-6">
+        <h2 className="font-display text-2xl md:text-3xl font-semibold mb-10">Skills</h2>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {SKILL_GROUPS.map((group) => (
+            <div
+              key={group.label}
+              className="rounded-2xl border border-border bg-card/50 p-6"
+              data-testid={`skill-group-${group.label.toLowerCase().replace(/\s+/g, "-")}`}
+            >
+              <div className="flex items-center gap-2.5 mb-4">
+                <span
+                  className="h-2 w-2 rounded-full shrink-0"
+                  style={{ background: `hsl(var(--${group.dot}))` }}
+                />
+                <h3 className="font-medium text-sm">{group.label}</h3>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {group.items.map((item) => (
+                  <span
+                    key={item}
+                    className="text-xs font-mono text-muted-foreground bg-muted rounded-full px-2.5 py-1"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Education() {
+  return (
+    <section id="education" className="py-20 md:py-28 rule-glow">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="grid lg:grid-cols-[340px_1fr] gap-10 lg:gap-16">
+          <h2 className="font-display text-2xl md:text-3xl font-semibold">Education</h2>
+          <div className="max-w-2xl rounded-2xl border border-border bg-card/50 p-7">
+            <div className="flex gap-4">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-primary">
+                <GraduationCap className="h-5 w-5" />
+              </span>
+              <div className="flex-1">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                  <h3 className="font-medium text-[1.05rem]">B.Sc. Software Engineering</h3>
+                  <span className="font-mono text-xs text-muted-foreground">Expected 2030</span>
+                </div>
+                <p className="text-muted-foreground text-sm mt-1">University of the Punjab, Lahore</p>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-border">
+              <h3 className="text-sm font-medium mb-3">Certifications &amp; training</h3>
+              <ul className="space-y-2.5 text-[0.95rem]">
+                <li className="flex items-baseline justify-between gap-4">
+                  <span>AI Web Development Cohort &mdash; DTAN, Lahore</span>
+                  <span className="text-xs text-muted-foreground shrink-0 font-mono">2026</span>
+                </li>
+                <li className="flex items-baseline justify-between gap-4">
+                  <span>Web Development Fundamentals &mdash; DTAN, Lahore</span>
+                </li>
+                <li className="flex items-baseline justify-between gap-4">
+                  <span>Google IT Automation with Python &mdash; Coursera</span>
+                  <span className="text-xs text-muted-foreground shrink-0 font-mono">In progress</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Contact() {
+  const links = [
+    { icon: Mail, label: "tayabghafoor786@gmail.com", href: "mailto:tayabghafoor786@gmail.com", testid: "link-email" },
+    { icon: Github, label: "github.com/tayab-ghafoor", href: "https://github.com/tayab-ghafoor", testid: "link-github" },
+    {
+      icon: Linkedin,
+      label: "linkedin.com/in/tayab-ghafoor",
+      href: "https://www.linkedin.com/in/tayab-ghafoor-100100338",
+      testid: "link-linkedin",
+    },
+  ];
+
+  return (
+    <section id="contact" className="py-20 md:py-28 rule-glow bg-muted/20">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="grid lg:grid-cols-[340px_1fr] gap-10 lg:gap-16">
+          <div>
+            <h2 className="font-display text-2xl md:text-3xl font-semibold mb-4">Contact</h2>
+            <p className="text-[1.05rem] leading-relaxed text-foreground/90 mb-8">
+              I'm looking for freelance projects, remote roles, and internship
+              opportunities. If you have something worth building well, I'd like
+              to hear about it.
+            </p>
+
+            <div className="flex flex-col gap-3 text-sm">
+              {links.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  target={link.href.startsWith("http") ? "_blank" : undefined}
+                  rel={link.href.startsWith("http") ? "noreferrer" : undefined}
+                  className="glow-border-hover inline-flex items-center gap-2.5 rounded-lg border border-border bg-card/50 px-4 py-3 hover:text-primary transition-colors"
+                  data-testid={link.testid}
+                >
+                  <link.icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{link.label}</span>
+                </a>
+              ))}
+              <span className="inline-flex items-center gap-2.5 text-muted-foreground px-4 py-1">
+                <MapPin className="h-4 w-4 shrink-0" />
+                Bela, Punjab, Pakistan
+              </span>
+            </div>
+          </div>
+
+          <ContactForm />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="rule-top py-10">
+      <div className="mx-auto max-w-6xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+        <span>&copy; {new Date().getFullYear()} Tayab Ghafoor</span>
+        <span className="inline-flex items-center gap-1.5 font-mono text-xs">
+          <Terminal className="h-3.5 w-3.5" />
+          Built with React, Tailwind CSS &amp; Three.js
+        </span>
+      </div>
+    </footer>
+  );
+}
+
+export default function Home() {
+  return (
+    <div className="min-h-screen">
+      <Nav />
+      <main>
+        <Hero />
+        <About />
+        <Work />
+        <Skills />
+        <Education />
+        <Contact />
+      </main>
+      <Footer />
     </div>
   );
 }

@@ -1,187 +1,170 @@
-import { Download, ArrowLeft, Mail, Github, Linkedin, ExternalLink, Phone, MapPin } from "lucide-react";
 import { Link } from "wouter";
+import { ArrowLeft, Download, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+const SKILLS = [
+  { label: "Languages", value: "Python, PHP, JavaScript, SQL, HTML/CSS, Bash" },
+  { label: "Backend & Frameworks", value: "Laravel, FastAPI, RESTful API design, SQLAlchemy, Alembic" },
+  { label: "Databases", value: "MySQL/MariaDB, PostgreSQL, SQLite" },
+  { label: "Frontend", value: "Blade, Tailwind CSS, Bootstrap, responsive design" },
+  { label: "DevOps & Deployment", value: "Git, GitHub Actions (CI/CD), Railway, Netlify, Hostinger, PyInstaller, Inno Setup" },
+  {
+    label: "Engineering Practices",
+    value: "Multi-tenant architecture, authentication & RBAC, automated testing (PHPUnit, pytest), database transactions & concurrency control, security auditing, cross-platform development",
+  },
+  {
+    label: "AI-Assisted Development",
+    value: "Use Claude and GitHub Copilot to accelerate implementation, debugging, and architecture planning — all resulting code independently tested and verified before integration; also integrate OpenAI's API as a product feature (voice-to-structured-data extraction in MediNest)",
+  },
+];
+
+const PROJECTS = [
+  {
+    name: "MediNest — Multi-Tenant Pharmacy Management SaaS",
+    meta: "Laravel 12, PHP, MySQL/MariaDB, Tailwind CSS  |  github.com/tayab-ghafoor/MediNest  |  Live: medinest.bela002.com",
+    bullets: [
+      "Designed a multi-tenant SaaS platform with a three-tier role system (Super Admin, Pharmacy Admin, Staff); tenant isolation is enforced at the database query layer via a global Eloquent scope, not just hidden in the UI.",
+      "Built purchase and sale transactions with database-level row locking to prevent overselling under concurrent access; sales validate real-time stock before completing and auto-generate invoices.",
+      "Added voice-assisted data entry with deterministic parsing and optional AI-based (OpenAI) extraction for free-form speech.",
+      "Wrote an automated PHPUnit test suite and configured GitHub Actions CI; deployed to production on Hostinger and diagnosed/fixed a live defect end-to-end, from log analysis to root-cause resolution.",
+    ],
+  },
+  {
+    name: "SysNova CLI — Cross-Platform System Management Platform",
+    meta: "Python, FastAPI, PostgreSQL, SQLAlchemy  |  github.com/tayab-ghafoor/sysnova_cli",
+    bullets: [
+      "Architected a ~20,000-line, 100+ module Python application with a 23-file automated test suite, covering system health monitoring, automated backups, and diagnostics — distributed as native Windows and Linux installers.",
+      "Built an AI-powered log analysis feature that scrubs sensitive data (credentials, tokens, IPs) from logs locally before any content reaches an AI API or remote server, then returns AI-generated fix suggestions.",
+      "Built a FastAPI backend with JWT authentication, subscription/payment handling, and an offline-first SQLite fallback for local-only operation.",
+      "Conducted and documented a full security audit of the authentication system (30 findings, including a critical plaintext credential leak) and remediated every finding, including brute-force protection and rate-limiter concurrency bugs.",
+      "Built a cross-platform CI/CD release pipeline (GitHub Actions, PyInstaller, Inno Setup) producing checksum-verified, auto-updating installers, and integrated cloud backup via rclone with OS-native credential storage across multiple providers.",
+    ],
+  },
+  {
+    name: "Context Handoff — Cross-Platform AI Chat Extension",
+    meta: "JavaScript, Chrome Extension (Manifest V3)  |  github.com/tayab-ghafoor/ai-context-handoff",
+    bullets: [
+      "Built a browser extension that carries compacted, code-preserving context from one AI chat platform (Claude, ChatGPT, Gemini) to another, with tiered summarization and a review-before-send handoff step.",
+    ],
+  },
+];
+
 export default function Resume() {
-  const handlePrint = () => window.print();
-
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="no-print sticky top-0 z-50 bg-background/90 backdrop-blur border-b border-border px-6 py-3 flex items-center justify-between">
-        <Link href="/">
-          <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-mono">
-            <ArrowLeft className="w-4 h-4" /> Back to Portfolio
-          </button>
-        </Link>
-        <Button onClick={handlePrint} className="gap-2 font-mono" data-testid="button-download-resume">
-          <Download className="w-4 h-4" /> Download PDF
-        </Button>
+    <div className="min-h-screen bg-muted/30">
+      <div className="no-print sticky top-0 z-10 glass-strong">
+        <div className="mx-auto max-w-4xl px-6 h-16 flex items-center justify-between">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            data-testid="link-back-home"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to portfolio
+          </Link>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => window.print()} data-testid="button-print">
+              <Printer className="h-4 w-4" />
+              Print
+            </Button>
+            <a href="/Tayab_Ghafoor_CV.pdf" download data-testid="link-download-pdf">
+              <Button size="sm">
+                <Download className="h-4 w-4" />
+                Download PDF
+              </Button>
+            </a>
+          </div>
+        </div>
       </div>
 
-      <div className="resume-page max-w-[800px] mx-auto my-8 px-8 py-10 bg-white dark:bg-[#0f1117] text-black dark:text-white border border-border shadow-2xl rounded-lg">
-
-        {/* Header */}
-        <header className="border-b-2 border-primary pb-6 mb-6">
-          <h1 className="text-4xl font-extrabold tracking-tight mb-1">Tayab Ghafoor</h1>
-          <p className="text-lg text-primary font-mono mb-4">Software Engineering Student</p>
-          <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5" /> Bela, Pakistan
-            </span>
-            <span className="flex items-center gap-1">
-              <Phone className="w-3.5 h-3.5" /> 0340-2129407
-            </span>
-            <a href="mailto:tayabghafoor786@gmail.com" className="flex items-center gap-1 hover:text-primary transition-colors">
-              <Mail className="w-3.5 h-3.5" /> tayabghafoor786@gmail.com
-            </a>
-            <a href="https://github.com/tayab-ghafoor" target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-primary transition-colors">
-              <Github className="w-3.5 h-3.5" /> github.com/tayab-ghafoor
-            </a>
-            <a href="https://www.linkedin.com/in/tayab-ghafoor-100100338" target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-primary transition-colors">
-              <Linkedin className="w-3.5 h-3.5" /> linkedin.com/in/tayab-ghafoor-100100338
-            </a>
+      <div className="mx-auto max-w-4xl px-6 py-10">
+        <div className="resume-page bg-card text-card-foreground border border-border rounded-2xl p-8 sm:p-12 shadow-xl">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="font-display text-3xl font-semibold">Tayab Ghafoor</h1>
+            <p className="text-sm text-muted-foreground mt-2">
+              Bela, Punjab, Pakistan &nbsp;|&nbsp; +92 340 2129407 &nbsp;|&nbsp; tayabghafoor786@gmail.com
+            </p>
+            <p className="text-sm text-muted-foreground mt-1">
+              linkedin.com/in/tayab-ghafoor-100100338 &nbsp;|&nbsp; github.com/tayab-ghafoor &nbsp;|&nbsp;{" "}
+              tayab-ghafoor-portfolio.netlify.app
+            </p>
           </div>
-        </header>
 
-        {/* Summary */}
-        <section className="mb-6">
-          <h2 className="resume-section-title">Professional Summary</h2>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            First-semester Software Engineering student with hands-on experience building Python-based tools and exploring
-            web development and IT automation. Passionate about system administration, scripting, and solving practical
-            problems through code. Seeking an internship or assistant role to apply and grow technical and teamwork skills.
-          </p>
-        </section>
+          {/* Summary */}
+          <section className="mb-7">
+            <h2 className="resume-section-title">Summary</h2>
+            <p className="text-[0.95rem] leading-relaxed text-foreground/90">
+              Self-directed software developer with hands-on production experience across full-stack web
+              development and backend systems engineering, currently pursuing a B.Sc. in Software Engineering.
+              Built and deployed a multi-tenant SaaS platform (Laravel/PHP) with tenant-isolated data and
+              role-based access control, and an independent cross-platform system-management application
+              (Python/FastAPI) spanning backend API design, security auditing, desktop packaging, and CI/CD
+              release automation. Comfortable across the full lifecycle: architecture, implementation, automated
+              testing, and deployment. Open to freelance projects, remote roles, and internship opportunities.
+            </p>
+          </section>
 
-        {/* Education */}
-        <section className="mb-6">
-          <h2 className="resume-section-title">Education</h2>
-          <div className="flex justify-between items-start mb-3">
-            <div>
-              <h3 className="font-bold text-base">B.Sc. Software Engineering (First Semester)</h3>
-              <p className="text-sm text-muted-foreground">University of the Punjab, Lahore</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Relevant Coursework: Introduction to Programming (Python), Calculus I, Discrete Mathematics, Computing Fundamentals
-              </p>
-            </div>
-            <span className="text-sm font-mono text-primary whitespace-nowrap ml-4">Expected 2030</span>
-          </div>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Additional Training</p>
-            <ul className="text-sm text-muted-foreground space-y-0.5 list-disc list-inside">
-              <li>Google IT Automation with Python Professional Certificate — In Progress (Coursera)</li>
-              <li>AI Web Development — DTAN, Lahore (In Progress)</li>
-              <li>Web Development Fundamentals — DTAN, Lahore</li>
-            </ul>
-          </div>
-        </section>
+          {/* Skills */}
+          <section className="mb-7">
+            <h2 className="resume-section-title">Technical Skills</h2>
+            <dl className="space-y-2">
+              {SKILLS.map((skill) => (
+                <div key={skill.label} className="text-[0.92rem] leading-relaxed">
+                  <span className="font-semibold">{skill.label}: </span>
+                  <span className="text-foreground/90">{skill.value}</span>
+                </div>
+              ))}
+            </dl>
+          </section>
 
-        {/* Skills */}
-        <section className="mb-6">
-          <h2 className="resume-section-title">Technical Skills</h2>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>
-              <span className="font-semibold">Languages:</span>
-              <span className="text-muted-foreground ml-2">Python, HTML, CSS, JavaScript (basic)</span>
+          {/* Projects */}
+          <section className="mb-7">
+            <h2 className="resume-section-title">Projects</h2>
+            <div className="space-y-6">
+              {PROJECTS.map((project) => (
+                <div key={project.name}>
+                  <h3 className="font-medium text-[0.98rem]">{project.name}</h3>
+                  <p className="text-xs text-muted-foreground italic mt-0.5 mb-2">{project.meta}</p>
+                  <ul className="space-y-1.5">
+                    {project.bullets.map((bullet, i) => (
+                      <li key={i} className="text-[0.92rem] leading-relaxed text-foreground/90 pl-4 relative">
+                        <span className="absolute left-0">-</span>
+                        {bullet}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
-            <div>
-              <span className="font-semibold">Automation:</span>
-              <span className="text-muted-foreground ml-2">File handling, system monitoring, task scheduling, shell scripting</span>
-            </div>
-            <div>
-              <span className="font-semibold">Tools:</span>
-              <span className="text-muted-foreground ml-2">Git, GitHub, VS Code, Command Line (Linux/Windows)</span>
-            </div>
-            <div>
-              <span className="font-semibold">Concepts:</span>
-              <span className="text-muted-foreground ml-2">Procedural programming, error handling, log parsing, CRON scheduling, system resource monitoring</span>
-            </div>
-            <div>
-              <span className="font-semibold">Soft Skills:</span>
-              <span className="text-muted-foreground ml-2">Problem-solving, self-directed learning, time management, clear documentation</span>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        {/* Projects */}
-        <section className="mb-6">
-          <h2 className="resume-section-title">Projects</h2>
-          <div className="space-y-5">
-            <div>
-              <div className="flex justify-between items-start">
-                <h3 className="font-bold text-base">System Manager CLI (Python) — Ongoing Personal Project</h3>
-                <a href="https://github.com/tayab-ghafoor" target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs font-mono text-primary hover:underline no-print">
-                  <ExternalLink className="w-3 h-3" /> GitHub
-                </a>
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                A modular CLI tool to automate common system administration tasks. Demonstrates ability to design, structure,
-                and maintain a multi-feature application from scratch.
-              </p>
-              <ul className="text-sm text-muted-foreground mt-1 list-disc list-inside space-y-0.5">
-                <li>Health Monitor: Real-time CPU, memory, and disk usage with visual alerts</li>
-                <li>Backup Logic: Automated file backup with versioning; cloud integration planned</li>
-                <li>Logs Analysis System: Parses system/app logs to identify errors and usage patterns</li>
-                <li>Temp File Organizer: Scans, organizes, and securely deletes temporary files</li>
-                <li>Scheduled Tasks: Built-in scheduler runs health checks or backups at user-defined intervals</li>
-              </ul>
-              <p className="text-xs font-mono text-primary mt-1">Python &bull; CLI &bull; System Administration &bull; Automation</p>
+          {/* Education */}
+          <section className="mb-7">
+            <h2 className="resume-section-title">Education</h2>
+            <div className="flex items-baseline justify-between">
+              <h3 className="font-medium text-[0.98rem]">
+                B.Sc. Software Engineering &mdash; University of the Punjab, Lahore
+              </h3>
             </div>
+            <p className="text-xs text-muted-foreground italic mt-0.5">Expected Graduation: 2030</p>
+          </section>
 
-            <div>
-              <div className="flex justify-between items-start">
-                <h3 className="font-bold text-base">Calculator App (Python) — Introductory Project</h3>
-                <a href="https://github.com/tayab-ghafoor" target="_blank" rel="noreferrer" className="flex items-center gap-1 text-xs font-mono text-primary hover:underline no-print">
-                  <ExternalLink className="w-3 h-3" /> GitHub
-                </a>
-              </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                An interactive command-line calculator supporting basic arithmetic operations with input validation and
-                continuous calculation loops — used as a foundation for understanding Python syntax, functions, and user interaction.
-              </p>
-              <p className="text-xs font-mono text-primary mt-1">Python &bull; CLI &bull; Input Validation &bull; Error Handling</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Leadership */}
-        <section className="mb-6">
-          <h2 className="resume-section-title">Leadership & Activities</h2>
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-bold text-base">Peer Learning & Study Groups</h3>
-              <p className="text-sm text-muted-foreground">Self-Organized — University of the Punjab</p>
-              <ul className="text-sm text-muted-foreground mt-1 list-disc list-inside space-y-0.5">
-                <li>Organized weekly programming study sessions to review concepts and solve coding exercises</li>
-                <li>Helped classmates troubleshoot Python errors and explain basic programming concepts</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* Certifications */}
-        <section className="mb-6">
-          <h2 className="resume-section-title">Certifications & Courses</h2>
-          <ul className="text-sm text-muted-foreground space-y-0.5 list-disc list-inside">
-            <li>Google IT Automation with Python — Coursera (In Progress)</li>
-            <li>AI Web Development — DTAN, Lahore (In Progress)</li>
-            <li>Web Development — DTAN, Lahore</li>
-          </ul>
-        </section>
-
-        {/* Languages */}
-        <section>
-          <h2 className="resume-section-title">Languages</h2>
-          <div className="flex gap-8 text-sm">
-            <div><span className="font-semibold">Urdu</span> <span className="text-muted-foreground">— Native</span></div>
-            <div><span className="font-semibold">English</span> <span className="text-muted-foreground">— Fluent</span></div>
-          </div>
-        </section>
+          {/* Certifications */}
+          <section>
+            <h2 className="resume-section-title">Certifications &amp; Training</h2>
+            <p className="text-[0.92rem] leading-relaxed text-foreground/90">
+              AI Web Development Cohort &mdash; DTAN, Lahore (2026) &nbsp;&middot;&nbsp; Web Development
+              Fundamentals &mdash; DTAN, Lahore &nbsp;&middot;&nbsp; Google IT Automation with Python &mdash;
+              Coursera (In Progress)
+            </p>
+            <p className="text-[0.92rem] mt-3">
+              <span className="font-semibold text-primary">Languages: </span>
+              Urdu (Native) &nbsp;&middot;&nbsp; English (Fluent)
+            </p>
+          </section>
+        </div>
       </div>
-
-      <p className="no-print text-center text-xs text-muted-foreground font-mono pb-8">
-        Tip: Click "Download PDF" or use Ctrl+P / Cmd+P to save as PDF. Choose "Save as PDF" in the print dialog.
-      </p>
     </div>
   );
 }
